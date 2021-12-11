@@ -13,7 +13,7 @@ begin-options
      " <filename-base> <subwallet-id> <order-file> [-n|-b] [-t<timeout>] [<savefile>]" +cr +tab
     +"Creates a request with up to 254 orders loaded from <order-file> to high-load (sub)wallet created by new-highload-v2-wallet.fif, with private key loaded from file <filename-base>.pk "
     +"and address from <filename-base><subwallet-id>.addr, and saves it into <savefile>.boc ('wallet-query.boc' by default)" +cr
-    +"<order-file> is a text file with lines `SEND <dest-addr> <amount>`"
+    +"<order-file> is a text file with lines `SEND <dest-addr> <amount> <comment>`"
     disable-digit-options generic-help-setopt
   "n" "--no-bounce" { false =: allow-bounce } short-long-option
     "Clears bounce flag" option-help
@@ -61,17 +61,17 @@ variable order#   order# 0!
 { ."Transferring " 3 roll .GR ."to account "
   -rot 2dup 4 pick 7 + .Addr ." = " .addr ." bounce=" . cr
 } : .transfer
-// addr$ ng -- c
-{ swap parse-smc-addr force-bounce or allow-bounce and  // ng wc addr bnc
+// addr$ ng cmt -- c
+{ -rot swap parse-smc-addr force-bounce or allow-bounce and  // cmt ng wc addr bnc
   2over 2over .transfer
-  <b 0 32 u, b> create-int-msg
+  4 roll simple-transfer-body create-int-msg
 } : create-simple-transfer
 // c m -- c'
 { <b swap 8 u, swap ref, b> } : create-order
 
-// addr$ ng --
+// addr$ ng cmt --
 { create-simple-transfer send-mode create-order add-order } : send
-{ bl word bl word $>GR send } : SEND
+{ bl word bl word $>GR 0 word send } : SEND
 
 // parse order file
 order-file include
